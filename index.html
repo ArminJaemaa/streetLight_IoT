@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="et">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,19 +13,24 @@
       text-align: center;
       background: #1e1e24;
       color: #fff;
-      padding-top: 40px;
+      padding: 30px 10px;
     }
+
     .status {
       font-size: 14px;
       margin-bottom: 25px;
       color: #aaa;
     }
-    .status span { font-weight: bold; }
+
+    .status span {
+      font-weight: bold;
+    }
+
     .btn {
       display: block;
       width: 250px;
-      margin: 12px auto;
-      padding: 15px;
+      margin: 10px auto;
+      padding: 14px;
       font-size: 16px;
       font-weight: bold;
       border: none;
@@ -32,31 +38,126 @@
       cursor: pointer;
       transition: transform 0.1s, opacity 0.2s;
     }
-    .btn:active { transform: scale(0.97); }
-    .btn-green  { background: #2ecc71; color: white; }
-    .btn-yellow { background: #f39c12; color: white; }
-    .btn-cross  { background: #1021e2; color: white; }
-    .btn-gray   { background: #7f8c8d; color: white; }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-green {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .btn-yellow {
+      background: #f39c12;
+      color: white;
+    }
+
+    .btn-cross {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-gray {
+      background: #7f8c8d;
+      color: white;
+    }
+
+    /* --- VALGUSFOORIDE DISAIN --- */
+    .traffic-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      margin-top: 35px;
+    }
+
+    .traffic-housing {
+      background: #111;
+      border: 4px solid #333;
+      border-radius: 20px;
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      width: 75px;
+    }
+
+    .traffic-title {
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    .bulb {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      margin: 10px auto;
+      background: #252525;
+      border: 2px solid #1a1a1a;
+      transition: background 0.1s, box-shadow 0.1s;
+    }
+
+    .bulb.red.active {
+      background: #ff3b30;
+      box-shadow: 0 0 25px #ff3b30, inset 0 0 10px #ffffff;
+    }
+
+    .bulb.yellow.active {
+      background: #ffcc00;
+      box-shadow: 0 0 25px #ffcc00, inset 0 0 10px #ffffff;
+    }
+
+    .bulb.green.active {
+      background: #2ecc71;
+      box-shadow: 0 0 25px #2ecc71, inset 0 0 10px #ffffff;
+    }
   </style>
 </head>
+
 <body>
 
-  <h2>🚦 Street Light Remote</h2>
+  <h2>🚦 valgusFoorid</h2>
   <div class="status">Broker Status: <span id="status-text" style="color: #f1c40f;">Connecting...</span></div>
+
 
   <button class="btn btn-green" onclick="sendMode('NORMAL')">Tavaline</button>
   <button class="btn btn-yellow" onclick="sendMode('NIGHT')">Kollased vilkuvad</button>
-  <button class="btn btn-red" onclick="sendMode('YOU_SHALL_PASS')">Inimene tahab üle</button>
+  <button class="btn btn-cross" onclick="sendMode('YOU_SHALL_PASS')">Inimene tahab üle</button>
   <button class="btn btn-gray" onclick="sendMode('OFF')">Kinni</button>
 
+  <div class="traffic-container">
+
+    <!-- Autode foor (3 tuld) -->
+    <div class="traffic-housing">
+      <div class="traffic-title">AUTOD</div>
+      <div id="car-r" class="bulb red"></div>
+      <div id="car-y" class="bulb yellow"></div>
+      <div id="car-g" class="bulb green"></div>
+    </div>
+
+    <!-- Jalakäijate foor (2 tuld) -->
+    <div class="traffic-housing">
+      <div class="traffic-title">INIMESED</div>
+      <div id="hum-r" class="bulb red"></div>
+      <div id="hum-g" class="bulb green"></div>
+    </div>
+
+  </div>
+
   <script>
-    const TOPIC = "TrafficIoTTLU2k26/mode";
+    const TOPIC_CMD = "TrafficIoTTLU2k26/mode";
+    const TOPIC_STATUS = "TrafficIoTTLU2k26/status";
 
     const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
     client.on('connect', () => {
       document.getElementById('status-text').innerText = "Connected";
       document.getElementById('status-text').style.color = "#2ecc71";
+
+      // Tellime koheselt tulede reaalajas tagasiside kanali
+      client.subscribe(TOPIC_STATUS);
     });
 
     client.on('error', (err) => {
@@ -65,9 +166,32 @@
       document.getElementById('status-text').style.color = "#e74c3c";
     });
 
+    // KUI NODEMCU SAADAB TULEDE SEISU (nt sõnum "10001")
+    client.on('message', (topic, message) => {
+      if (topic === TOPIC_STATUS) {
+        const state = message.toString();
+
+        // 1 = tuli põleb, 0 = tuli on kustus
+        setBulbState('car-r', state[0] === '1');
+        setBulbState('car-y', state[1] === '1');
+        setBulbState('car-g', state[2] === '1');
+        setBulbState('hum-r', state[3] === '1');
+        setBulbState('hum-g', state[4] === '1');
+      }
+    });
+
+    function setBulbState(id, isActive) {
+      const el = document.getElementById(id);
+      if (isActive) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    }
+
     function sendMode(mode) {
       if (client.connected) {
-        client.publish(TOPIC, mode);
+        client.publish(TOPIC_CMD, mode);
         console.log("Sent mode:", mode);
       } else {
         alert("Not connected to MQTT broker yet!");
@@ -75,4 +199,5 @@
     }
   </script>
 </body>
+
 </html>
