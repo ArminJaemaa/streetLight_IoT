@@ -4,144 +4,200 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Street Light Controller</title>
-  <!-- MQTT Browser Library -->
+  <title>IoT</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       text-align: center;
-      background: #1e1e24;
+      background: #18191f;
       color: #fff;
-      padding: 30px 10px;
+      padding: 25px 10px;
     }
 
     .status {
-      font-size: 14px;
-      margin-bottom: 25px;
+      font-size: 13px;
+      margin-bottom: 20px;
       color: #aaa;
     }
-
-    .status span {
-      font-weight: bold;
-    }
+    .status span { font-weight: bold; }
 
     .btn {
-      display: block;
-      width: 250px;
-      margin: 10px auto;
-      padding: 14px;
-      font-size: 16px;
+      display: inline-block;
+      width: 180px;
+      margin: 5px;
+      padding: 12px;
+      font-size: 15px;
       font-weight: bold;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s, opacity 0.2s;
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-green {
-      background: #2ecc71;
       color: white;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-green  { background: #2ecc71; }
+    .btn-yellow { background: #f39c12; }
+    .btn-cross  { background: #3498db; }
+    .btn-gray   { background: #7f8c8d; }
+
+    .wave-panel {
+      margin: 20px auto;
+      max-width: 380px;
+      background: #232530;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #333644;
+    }
+    .wave-title {
+      font-size: 13px;
+      color: #79a1f5;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .delay-btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-delay {
+      flex: 1;
+      padding: 8px 0;
+      font-size: 14px;
+      font-weight: bold;
+      border: 1px solid #444;
+      background: #18191f;
+      color: #aaa;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-delay.active {
+      background: #007bff;
+      color: #fff;
+      border-color: #007bff;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
     }
 
-    .btn-yellow {
-      background: #f39c12;
-      color: white;
-    }
-
-    .btn-cross {
-      background: #3498db;
-      color: white;
-    }
-
-    .btn-gray {
-      background: #7f8c8d;
-      color: white;
-    }
-
-    /* --- VALGUSFOORIDE DISAIN --- */
-    .traffic-container {
+    /* FOORIDE KUVAMINE */
+    .intersections-wrapper {
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      gap: 30px;
-      margin-top: 35px;
+      gap: 40px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .intersection-card {
+      background: #232530;
+      padding: 18px 20px;
+      border-radius: 16px;
+      border: 1px solid #333644;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 15px;
+    }
+
+    .lights-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
     }
 
     .traffic-housing {
       background: #111;
-      border: 4px solid #333;
-      border-radius: 20px;
-      padding: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-      width: 75px;
+      border: 3px solid #333;
+      border-radius: 18px;
+      padding: 12px;
+      width: 65px;
     }
 
-    .traffic-title {
-      font-size: 11px;
+    .housing-title {
+      font-size: 10px;
       font-weight: bold;
-      letter-spacing: 1px;
       color: #777;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .bulb {
-      width: 55px;
-      height: 55px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
-      margin: 10px auto;
-      background: #252525;
+      margin: 8px auto;
+      background: #222;
       border: 2px solid #1a1a1a;
-      transition: background 0.1s, box-shadow 0.1s;
+      transition: background 0.05s, box-shadow 0.05s;
     }
 
-    .bulb.red.active {
-      background: #ff3b30;
-      box-shadow: 0 0 25px #ff3b30, inset 0 0 10px #ffffff;
-    }
-
-    .bulb.yellow.active {
-      background: #ffcc00;
-      box-shadow: 0 0 25px #ffcc00, inset 0 0 10px #ffffff;
-    }
-
-    .bulb.green.active {
-      background: #2ecc71;
-      box-shadow: 0 0 25px #2ecc71, inset 0 0 10px #ffffff;
-    }
+    .bulb.red.active    { background: #ff3b30; box-shadow: 0 0 20px #ff3b30; }
+    .bulb.yellow.active { background: #ffcc00; box-shadow: 0 0 20px #ffcc00; }
+    .bulb.green.active  { background: #2ecc71; box-shadow: 0 0 20px #2ecc71; }
   </style>
 </head>
 
 <body>
 
-  <h2>🚦 valgusFoorid</h2>
-  <div class="status">Broker Status: <span id="status-text" style="color: #f1c40f;">Connecting...</span></div>
+  <h2>🚦 streetLights</h2>
+  <div class="status">Broker: <span id="status-text" style="color: #f1c40f;">Connecting...</span></div>
+
+  <div>
+    <button class="btn btn-green" onclick="sendMode('NORMAL')">Normal</button>
+    <button class="btn btn-yellow" onclick="sendMode('NIGHT')">Öö</button>
+    <button class="btn btn-cross" onclick="sendMode('YOU_SHALL_PASS')">Inimene tahab üle</button>
+    <button class="btn btn-gray" onclick="sendMode('OFF')">Välja lülitatud</button>
+  </div>
 
 
-  <button class="btn btn-green" onclick="sendMode('NORMAL')">Tavaline</button>
-  <button class="btn btn-yellow" onclick="sendMode('NIGHT')">Kollased vilkuvad</button>
-  <button class="btn btn-cross" onclick="sendMode('YOU_SHALL_PASS')">Inimene tahab üle</button>
-  <button class="btn btn-gray" onclick="sendMode('OFF')">Kinni</button>
+  <div class="wave-panel">
+    <div class="wave-title">Nihe<span id="delay-label"></span></div>
+    <div class="delay-btn-group">
+      <button class="btn-delay" onclick="setDelay(0, this)">0s</button>
+      <button class="btn-delay" onclick="setDelay(1, this)">1s</button>
+      <button class="btn-delay active" onclick="setDelay(2, this)">2s</button>
+      <button class="btn-delay" onclick="setDelay(3, this)">3s</button>
+    </div>
+  </div>
 
-  <div class="traffic-container">
+  <div class="intersections-wrapper">
 
-    <!-- Autode foor (3 tuld) -->
-    <div class="traffic-housing">
-      <div class="traffic-title">AUTOD</div>
-      <div id="car-r" class="bulb red"></div>
-      <div id="car-y" class="bulb yellow"></div>
-      <div id="car-g" class="bulb green"></div>
+    <div class="intersection-card">
+      <div class="card-title">FOOR 1</div>
+      <div class="lights-group">
+        <div class="traffic-housing">
+          <div class="housing-title">AUTOD</div>
+          <div id="f1-car-r" class="bulb red"></div>
+          <div id="f1-car-y" class="bulb yellow"></div>
+          <div id="f1-car-g" class="bulb green"></div>
+        </div>
+        <div class="traffic-housing">
+          <div class="housing-title">INIMESED</div>
+          <div id="f1-hum-r" class="bulb red"></div>
+          <div id="f1-hum-g" class="bulb green"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Jalakäijate foor (2 tuld) -->
-    <div class="traffic-housing">
-      <div class="traffic-title">INIMESED</div>
-      <div id="hum-r" class="bulb red"></div>
-      <div id="hum-g" class="bulb green"></div>
+    <!-- 2. FOOR (TÄNAVA JÄRGMINE RISTMIK - ROHELISE LAINEGA) -->
+    <div class="intersection-card" style="border-color: #007bff;">
+      <div class="card-title" style="color: #007bff;">FOOR 2</div>
+      <div class="lights-group">
+        <div class="traffic-housing">
+          <div class="housing-title">AUTOD</div>
+          <div id="f2-car-r" class="bulb red"></div>
+          <div id="f2-car-y" class="bulb yellow"></div>
+          <div id="f2-car-g" class="bulb green"></div>
+        </div>
+        <div class="traffic-housing">
+          <div class="housing-title">INIMESED</div>
+          <div id="f2-hum-r" class="bulb red"></div>
+          <div id="f2-hum-g" class="bulb green"></div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -150,14 +206,17 @@
     const TOPIC_CMD = "TrafficIoTTLU2k26/mode";
     const TOPIC_STATUS = "TrafficIoTTLU2k26/status";
 
+    let delaySeconds = 0;
+    let currentMode = "NORMAL";
+    let stateHistory = [];
+
     const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
     client.on('connect', () => {
       document.getElementById('status-text').innerText = "Connected";
       document.getElementById('status-text').style.color = "#2ecc71";
-
-      // Tellime koheselt tulede reaalajas tagasiside kanali
       client.subscribe(TOPIC_STATUS);
+      client.subscribe(TOPIC_CMD);
     });
 
     client.on('error', (err) => {
@@ -166,38 +225,80 @@
       document.getElementById('status-text').style.color = "#e74c3c";
     });
 
-    // KUI NODEMCU SAADAB TULEDE SEISU (nt sõnum "10001")
+    // KUI NODEMCU-LT TULEB TULEDE OLEK:
     client.on('message', (topic, message) => {
       if (topic === TOPIC_STATUS) {
         const state = message.toString();
+        const now = Date.now();
 
-        // 1 = tuli põleb, 0 = tuli on kustus
-        setBulbState('car-r', state[0] === '1');
-        setBulbState('car-y', state[1] === '1');
-        setBulbState('car-g', state[2] === '1');
-        setBulbState('hum-r', state[3] === '1');
-        setBulbState('hum-g', state[4] === '1');
+        renderFoor(1, state);
+
+        stateHistory.push({ time: now, state: state, mode: currentMode });
+        if (stateHistory.length > 60) {
+          stateHistory = stateHistory.filter(item => now - item.time < 15000);
+        }
       }
     });
 
-    function setBulbState(id, isActive) {
+    setInterval(() => {
+      if (stateHistory.length === 0) return;
+
+      if (currentMode === "NIGHT" || currentMode === "YOU_SHALL_PASS" || currentMode === "OFF" || delaySeconds === 0) {
+        const latestState = stateHistory[stateHistory.length - 1].state;
+        renderFoor(2, latestState);
+        return;
+      }
+
+      const targetTime = Date.now() - (delaySeconds * 1000);
+      let stateToRender = null;
+      for (let i = stateHistory.length - 1; i >= 0; i--) {
+        if (stateHistory[i].time <= targetTime) {
+          stateToRender = stateHistory[i].state;
+          break;
+        }
+      }
+
+      if (!stateToRender && stateHistory.length > 0) {
+        stateToRender = stateHistory[0].state;
+      }
+
+      if (stateToRender) {
+        renderFoor(2, stateToRender);
+      }
+    }, 40);
+
+    function renderFoor(foorNum, state) {
+      const prefix = "f" + foorNum + "-";
+      setBulb(prefix + 'car-r', state[0] === '1');
+      setBulb(prefix + 'car-y', state[1] === '1');
+      setBulb(prefix + 'car-g', state[2] === '1');
+      setBulb(prefix + 'hum-r', state[3] === '1');
+      setBulb(prefix + 'hum-g', state[4] === '1');
+    }
+
+    function setBulb(id, isActive) {
       const el = document.getElementById(id);
-      if (isActive) {
-        el.classList.add('active');
-      } else {
-        el.classList.remove('active');
+      if (el) {
+        if (isActive) el.classList.add('active');
+        else el.classList.remove('active');
       }
     }
 
+    function setDelay(seconds, btnElement) {
+      delaySeconds = seconds;
+      document.querySelectorAll('.btn-delay').forEach(b => b.classList.remove('active'));
+      btnElement.classList.add('active');
+    }
+
     function sendMode(mode) {
+      currentMode = mode;
       if (client.connected) {
         client.publish(TOPIC_CMD, mode);
         console.log("Sent mode:", mode);
       } else {
-        alert("Not connected to MQTT broker yet!");
+        alert("Ühendus brokeriga puudub!");
       }
     }
   </script>
 </body>
-
 </html>
